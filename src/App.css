@@ -114,27 +114,37 @@ a:hover {
   align-items: center;
 }
 
+.center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
 .success {
   color: var(--color-success-transparent);
-  font-weight: bold;
-  border-radius: 1rem;
-  margin: 1rem 0;
   transition: color 0.3s ease-in-out;
 }
 
 .error {
   color: var(--color-error);
+  transition: color 0.3s ease-in-out;
+}
+
+.status {
+  color: var(--color-fg);
+  margin: 0 2rem;
+  font-size: .9rem;
   font-weight: bold;
   border-radius: 1rem;
-  margin: 1rem 0;
   transition: color 0.3s ease-in-out;
 }
 
 .start-scan-button {
-  margin-top: 1rem;;
   background-color: var(--color-success);
   color: var(--color-bg-alt);
   font-weight: bold;
+  margin-right: 1rem;
   border: none;
   box-shadow: 0 0 1rem var(--color-success-transparent);
   transition: box-shadow 0.3s ease-in-out;
@@ -280,7 +290,7 @@ footer {
 }
 #reports-table th, #reports-table td {
   border: 1px solid #444;
-  padding: 0.5rem;
+  padding: 0.5rem 1rem;
   text-align: left;
 }
 #reports-table th {

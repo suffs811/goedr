@@ -17,3 +17,6 @@
 Analysis command-line history for malicious stuff
 Continuous monitoring
 Response actions
+Export reports as csv
+View details for single report
+Settings: add/remove dirs to scan, exclude specific hashes, turn off/on ips/hashes scanning, 

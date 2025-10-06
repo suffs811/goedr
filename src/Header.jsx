@@ -6,10 +6,7 @@ import { animate } from 'animejs';
 
 function Header() {
     const [openMenu, setOpenMenu] = useState(false);
-    const [scanStatus, setScanStatus] = useState("idle"); // idle, scanning, completed
-    const [error, setError] = useState(null);
-    const [success, setSuccess] = useState(null);
-    const [buttonText, setButtonText] = useState("Start a scan");
+    const [scanStatus, setScanStatus] = useState("idle"); // idle, scanning, completed, error
 
     const fetchScanStatus = () => {
       fetch('/s/scanstatus')
@@ -27,25 +24,16 @@ function Header() {
         .catch(err => {
           console.error('Error fetching scan status:', err);
           setScanStatus("error");
-          setError('Error fetching scan status.');
-          setTimeout(() => setError(null), 5000); // Clear error after 5 seconds
+          setTimeout(() => setScanStatus("idle"), 3000); // Clear error after 3 seconds
         });
     }
 
-    useEffect(() => {
-      fetchScanStatus(); // Initial fetch
-      const interval = setInterval(fetchScanStatus, 1000); // Fetch every 1 second
-      return () => clearInterval(interval); // Cleanup on unmount
-    });
-
     const handleScanComplete = () => {
       setScanStatus("completed");
-      setButtonText("Scan completed!");
-      setSuccess('Scan completed successfully! Report is ready.');
       setTimeout(() => {
-        setSuccess(null);
-        setButtonText("Start a scan");
-      }, 5000); // Clear success after 5 seconds
+        setScanStatus("idle");
+        location.reload(); // Reload to show new report
+      }, 2000); // Clear success after 2 seconds
     }
 
     const handleStartScan = () => {
@@ -54,25 +42,24 @@ function Header() {
       .then(response => {
         if (response.ok) {
           setScanStatus("scanning");
-          setButtonText("Scanning");
-          setSuccess('Scan started successfully! Report will appear in the dashboard shortly.');
-          setTimeout(() => setSuccess(null), 5000); // Clear success after 5 seconds
         } else {
-          setError('Failed to start scan: ' + response.error);
+          console.error('Failed to start scan: ' + response.error);
+          setScanStatus("error");
           setTimeout(() => {
-            setError(null);
-            setButtonText("Start a scan");
-          }, 5000); // Clear error after 5 seconds
+            setScanStatus("idle");
+          }, 3000); // Clear error after 3 seconds
         }
       })
       .catch(err => {
         console.error('Error starting scan:', err);
-        setError('Error starting scan.');
+        setScanStatus("error");
         setTimeout(() => {
-          setError(null);
-          setButtonText("Start a scan");
-        }, 5000); // Clear error after 5 seconds
+          setScanStatus("idle");
+        }, 3000); // Clear error after 3 seconds
       });
+
+      const interval = setInterval(fetchScanStatus, 1000); // Fetch every 1 second
+        return () => clearInterval(interval); // Cleanup on unmount
   }
 
 
@@ -121,11 +108,10 @@ function Header() {
           <Link to="/">
             <h1 className='logoText'>GoEDR</h1>
           </Link>
+          {scanStatus && <><p className="status">Status: <span className={scanStatus === "completed" ? "success" : "error"}>{scanStatus}</span></p></>}
         </div>
         <div className='right menuIcon' >
-        {error && <p className="error">{error}</p>}
-        {success && <p className="success">{success}</p>}
-        {scanStatus === "idle" && <button className="start-scan-button" onClick={handleStartScan}>{buttonText}</button>}
+        <button className="start-scan-button" onClick={handleStartScan} disabled={scanStatus === "scanning"}>Start a scan</button>
         {!openMenu ?
             <img src={openMenuIcon} className={openMenu ? "logo menuIcon fade" : "logo menuIcon"}  alt="menu icon" onClick={toggleMenu} /> :
             <img src={exitMenuIcon} className={openMenu ? "logo menuIcon fade" : "logo menuIcon"} alt="exit menu icon" onClick={toggleMenu} />

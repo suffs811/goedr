@@ -29,6 +29,13 @@ function Base() {
     .then(response => response.json())
       .then(data => {
         const itemsArray = Object.entries(data.items).map(([timestamp, report]) => ({timestamp, ...report}));
+        itemsArray.sort((a, b) => b.timestamp - a.timestamp);
+        itemsArray.forEach(report => {
+          const epoch = report.timestamp.slice(0, 10);
+          const date = new Date(0);
+          date.setUTCSeconds(epoch);
+          report.date = date.toLocaleString();
+        });
         setReports(itemsArray);
       })
       .catch(err => {

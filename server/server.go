@@ -24,7 +24,7 @@ func Init() {
 	//r.POST("/users", func(c *gin.Context) { createUser(c, db) })
 
 	// Listing endpoints
-	r.GET("/s/", func(c *gin.Context) { getReports(c) })
+	r.GET("/s/dashboard", func(c *gin.Context) { getReports(c) })
 	r.GET("/s/delete", func(c *gin.Context) { delReport(c) })
 	r.GET("/s/start", func(c *gin.Context) { startScan(c) })
 	r.GET("/s/scanstatus", func(c *gin.Context) { scanStatus(c) })

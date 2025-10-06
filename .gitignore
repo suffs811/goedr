@@ -1,5 +1,6 @@
 dist/
 build/
+db/*
 
 # Logs
 logs

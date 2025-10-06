@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"runtime"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -89,7 +90,7 @@ func FetchAssets() {
 	resp, err = http.Get("https://bazaar.abuse.ch/export/txt/md5/recent/")
 	if err != nil {
 		logg("Error fetching recent hashes... Using previous list.")
-		// Get working directory
+		// Get full list of hashes
 		dir, err := os.Getwd()
 		echeck(err)
 		dir += "/data/"
@@ -97,10 +98,24 @@ func FetchAssets() {
 		echeck(e)
 		hashesRaw = strings.Split(string(file), "\n")
 	} else {
+		// Get full list of hashes
+		dir, err := os.Getwd()
+		echeck(err)
+		dir += "/data/"
+		file, e := os.ReadFile(dir + "full_hashes.txt")
+		echeck(e)
+		hashesRaw = strings.Split(string(file), "\n")
+
+		// Add recent hashes to full list
 		defer resp.Body.Close()
 		body, err = io.ReadAll(resp.Body)
 		echeck(err)
-		hashesRaw = strings.Split(string(body), "\n")
+		forHashesRaw := strings.Split(string(body), "\n")
+		for _, h := range forHashesRaw {
+			if !slices.Contains(hashesRaw, h) {
+				hashesRaw = append(hashesRaw, h)
+			}
+		}
 	}
 	for _, h := range hashesRaw {
 		if !strings.Contains(h, "#") && h != "" {

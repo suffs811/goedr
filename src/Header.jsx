@@ -4,46 +4,77 @@ import { useState, useEffect } from 'react'
 import { Link } from "react-router-dom";
 import { animate } from 'animejs';
 
-function Header( { isLoggedIn } ) {
+function Header() {
     const [openMenu, setOpenMenu] = useState(false);
-    const [csrfToken, setCsrfToken] = useState('');
+    const [scanStatus, setScanStatus] = useState("idle"); // idle, scanning, completed
+    const [error, setError] = useState(null);
+    const [success, setSuccess] = useState(null);
+    const [buttonText, setButtonText] = useState("Start a scan");
 
-    // Fetch CSRF token from the server
+    const fetchScanStatus = () => {
+      fetch('/s/scanstatus')
+        .then(response => response.json())
+        .then(data => {
+          if (data.status) {
+            setScanStatus(data.status);
+            if (data.status === "completed") {
+              handleScanComplete();
+            }
+          } else {
+            setScanStatus("idle");
+          }
+        })
+        .catch(err => {
+          console.error('Error fetching scan status:', err);
+          setScanStatus("error");
+          setError('Error fetching scan status.');
+          setTimeout(() => setError(null), 5000); // Clear error after 5 seconds
+        });
+    }
+
     useEffect(() => {
-        fetch('/s/csrf-token')
-            .then(response => response.json())
-            .then(data => {
-                setCsrfToken(data.csrfToken);
-            })
-            .catch(err => {
-                console.error('Error fetching CSRF token:', err);
-            });
-    }, []);
-
-  // Logout function
-  const logout = () => {
-    fetch('/s/logout', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'CSRF-Token': csrfToken // Include CSRF token in the request headers
-      },
-      credentials: 'include' // Include cookies in the request
-    })
-    .then(response => {
-      if (!response.ok) {
-        console.error('Logout failed:', response);
-        throw new Error(response);
-      }
-      console.log('Logout successful');
-      // Clear localStorage and redirect to home page
-    localStorage.removeItem("jwt");
-    window.location.href = "/";
-  })
-    .catch(error => {
-      console.error('Error during logout:', error);
+      fetchScanStatus(); // Initial fetch
+      const interval = setInterval(fetchScanStatus, 1000); // Fetch every 1 second
+      return () => clearInterval(interval); // Cleanup on unmount
     });
+
+    const handleScanComplete = () => {
+      setScanStatus("completed");
+      setButtonText("Scan completed!");
+      setSuccess('Scan completed successfully! Report is ready.');
+      setTimeout(() => {
+        setSuccess(null);
+        setButtonText("Start a scan");
+      }, 5000); // Clear success after 5 seconds
+    }
+
+    const handleStartScan = () => {
+    // Fetch /s/start endpoint
+    fetch('/s/start')
+      .then(response => {
+        if (response.ok) {
+          setScanStatus("scanning");
+          setButtonText("Scanning");
+          setSuccess('Scan started successfully! Report will appear in the dashboard shortly.');
+          setTimeout(() => setSuccess(null), 5000); // Clear success after 5 seconds
+        } else {
+          setError('Failed to start scan: ' + response.error);
+          setTimeout(() => {
+            setError(null);
+            setButtonText("Start a scan");
+          }, 5000); // Clear error after 5 seconds
+        }
+      })
+      .catch(err => {
+        console.error('Error starting scan:', err);
+        setError('Error starting scan.');
+        setTimeout(() => {
+          setError(null);
+          setButtonText("Start a scan");
+        }, 5000); // Clear error after 5 seconds
+      });
   }
+
 
     function menuClicked() {
       setOpenMenu(false); // Close the menu after clicking an item
@@ -83,30 +114,6 @@ function Header( { isLoggedIn } ) {
       document.querySelector(".headerMenu").style.display = openMenu ? 'block' : 'none'; // Toggle menu visibility
     }, [openMenu]);
 
-    const clearDatabases = () => {
-      isLoggedIn && logout();
-      fetch('/s/db/clear', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'CSRF-Token': csrfToken // Include CSRF token in the request headers
-        },
-        credentials: 'include' // Include cookies in the request
-      })
-      .then(response => {
-        if (!response.ok) {
-          console.error('Clear databases failed:', response);
-          throw new Error(response);
-        }
-        console.log('Databases successfully cleared');
-        window.alert('Databases successfully cleared');
-        window.location.href = "/";
-      })
-      .catch(error => {
-        console.error('Error during clear databases:', error);
-      });
-    }
-
   return (
     <>
       <div id="logoHeader">
@@ -116,7 +123,9 @@ function Header( { isLoggedIn } ) {
           </Link>
         </div>
         <div className='right menuIcon' >
-        <button onClick={clearDatabases}>Clear Databases</button>
+        {error && <p className="error">{error}</p>}
+        {success && <p className="success">{success}</p>}
+        {scanStatus === "idle" && <button className="start-scan-button" onClick={handleStartScan}>{buttonText}</button>}
         {!openMenu ?
             <img src={openMenuIcon} className={openMenu ? "logo menuIcon fade" : "logo menuIcon"}  alt="menu icon" onClick={toggleMenu} /> :
             <img src={exitMenuIcon} className={openMenu ? "logo menuIcon fade" : "logo menuIcon"} alt="exit menu icon" onClick={toggleMenu} />
@@ -127,14 +136,6 @@ function Header( { isLoggedIn } ) {
         <ul>
           <Link to="/"><li className='menuItem menuActive' onClick={menuClicked}>Home</li></Link>
           <Link to="/dashboard"><li className='menuItem menuActive' onClick={menuClicked}>Dashboard</li></Link>
-          <Link to="/settings"><li className='menuItem menuActive' onClick={menuClicked} value={'settings'}>Settings</li></Link>
-          <li className='menuItem menuSep'></li>
-          { isLoggedIn ?
-            <Link to="/logout"><li className='menuItem menuActive' onClick={logout} value={'logout'}>Logout</li></Link>
-            :<>
-            <Link to="/login"><li className='menuItem menuActive' onClick={menuClicked} value={'login'}>Login</li></Link>
-            <Link to="/register"><li className='menuItem menuActive' onClick={menuClicked} value={'register'}>Register</li></Link>
-          </>}
           <li className='menuItem menuSep'></li>
           <a href="https://github.com/suffs811" target="_blank"><li className='menuItem'>GitHub <span style={{color: '#F8F812'}}>{'\u2197'}</span></li></a>
         </ul>

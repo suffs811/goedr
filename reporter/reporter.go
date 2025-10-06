@@ -6,11 +6,13 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/shirou/gopsutil/v4/net"
+
 	"github.com/suffs811/goedr/godb"
 )
 
@@ -35,11 +37,6 @@ func echeck(e error) {
 
 func logg(s any) {
 	log.Println(s)
-}
-
-// Get malicious IPs and file hashes
-func init() {
-
 }
 
 func Start() godb.SecurityReport {
@@ -114,7 +111,9 @@ func FetchAssets() {
 
 func getFileHash(localFile string) string {
 	f, err := os.Open(localFile)
-	echeck(err)
+	if err != nil {
+		return ""
+	}
 	defer f.Close()
 	h := md5.New()
 	_, err = io.Copy(h, f)
@@ -124,7 +123,12 @@ func getFileHash(localFile string) string {
 }
 
 func CheckHashes() {
-	dirsToCheck := []string{"~/Desktop", "~/Downloads", "~/Documents", "C:/Windows/Temp"}
+	homeDir := os.Getenv("HOME")
+	dirsToCheck := []string{homeDir + "/Desktop", homeDir + "/Downloads", homeDir + "/Documents"}
+
+	if runtime.GOOS == "windows" {
+		dirsToCheck = append(dirsToCheck, "C:/Windows/Temp")
+	}
 
 	var filesToCheck []string
 
@@ -132,7 +136,7 @@ func CheckHashes() {
 		filesFound, err := os.ReadDir(dir)
 		echeck(err)
 		for _, file := range filesFound {
-			if !file.IsDir() {
+			if !file.IsDir() && file.Name()[0] != '.' {
 				filesToCheck = append(filesToCheck, file.Name())
 			}
 		}

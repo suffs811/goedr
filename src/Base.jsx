@@ -1,64 +1,76 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react'
+import ex from "./assets/ex.png"
+import './App.css'
 
-function Base( { isLoggedIn } ) {
-  const [userData, setUserData] = useState(null);
-  const [csrfToken, setCsrfToken] = useState('');
-  const jwtToken = localStorage.getItem("jwt");
+function Base() {
+  const [reports, setReports] = useState([])
 
-
-  // Fetch CSRF token from the server
   useEffect(() => {
-      fetch('/s/csrf-token')
-          .then(response => response.json())
-          .then(data => {
-              setCsrfToken(data.csrfToken);
-          })
-          .catch(err => {
-              console.error('Error fetching CSRF token:', err);
-          });
-  }, []);
-
-  // Get user info from the server at /user
-  useEffect(() => {
-    isLoggedIn &&
-      fetch('/s/user', {
-          method: 'GET',
-          headers: {
-              'Content-Type': 'application/json',
-              'CSRF-Token': csrfToken,
-              'Authorization': `Bearer ${jwtToken}`
-          },
-          credentials: 'include'
-      })
-      .then(response => {
-          if (!response.ok) {
-              throw new Error('Failed to fetch user info');
-          }
-          return response.json();
-      })
+    fetch('/s/dashboard')
+      .then(response => response.json())
       .then(data => {
-        console.log('Fetched user info:', data);
-          setUserData(data);
+        const itemsArray = Object.entries(data.items).map(([timestamp, report]) => ({timestamp, ...report}));
+        itemsArray.sort((a, b) => b.timestamp - a.timestamp);
+        itemsArray.forEach(report => {
+          const epoch = report.timestamp.slice(0, 10);
+          const date = new Date(0);
+          date.setUTCSeconds(epoch);
+          report.date = date.toLocaleString();
+        });
+        setReports(itemsArray);
       })
       .catch(err => {
-          console.error('Error fetching user info:', err);
+        console.error('Error fetching reports:', err);
       });
-  }, [csrfToken, isLoggedIn, jwtToken]);
+  }, [setReports]);
+
+  function deleteReport(timestamp) {
+    fetch('/s/delete?timestamp='+timestamp)
+    .then(response => response.json())
+      .then(data => {
+        const itemsArray = Object.entries(data.items).map(([timestamp, report]) => ({timestamp, ...report}));
+        setReports(itemsArray);
+      })
+      .catch(err => {
+        console.error('Error deleting report:', err);
+      });
+  }
 
   return (
     <>
       <div className='main'>
-      { isLoggedIn && userData ? (<>
-        <br/>
-        <p className='success'>Welcome, {userData.username}!</p>
-      </>) : (
-        null
-      )}
-      <h1>GoEDR</h1>
+        <h1>Dashboard</h1>
         <p>An endpoint detection & response tool written in Go</p>
+        <div id="reports-container">
+        <table style={{ whiteSpace: "nowrap"}} id="reports-table">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Ips</th>
+                    <th>Hashes</th>
+                    {/* <th>Cmds</th> */}
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+              {reports.map((report) => (
+                <tr key={report.timestamp}>
+                  <td>{report.date}</td>
+                  <td>{report.ip?.join(', ') || "No malicious IPs found"}</td>
+                  <td>{report.hash?.join(', ') || "No malicious hashes found"}</td>
+                  {/* <td>{report.cmd?.join(', ') || "No malicious commands found"}</td> */}
+                  <td onClick={() => deleteReport(report.timestamp)}>
+                    <img className="del-report-img" src={ex} alt=" X " />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          </div>
+        
       </div>
     </>
   )
 }
 
-export default Base
+export default Base;

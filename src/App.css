@@ -130,6 +130,16 @@ a:hover {
   transition: color 0.3s ease-in-out;
 }
 
+.start-scan-button {
+  margin-top: 1rem;;
+  background-color: var(--color-success);
+  color: var(--color-bg-alt);
+  font-weight: bold;
+  border: none;
+  box-shadow: 0 0 1rem var(--color-success-transparent);
+  transition: box-shadow 0.3s ease-in-out;
+}
+
 /* Header */
 #logoHeader {
   background-color: #1a1a1a;
@@ -246,112 +256,41 @@ footer {
   justify-content: center;
 }
 
-/* Settings */
-.settingsContainerToken {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+/* Dashboard */
+#reports-container {
   width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  overflow-x: auto;
 }
 
-.settingsInput {
+#reports-table {
   width: 100%;
-  max-width: 400px;
-  padding: 0.5rem;
-  border: 2px solid #ffffff33;
-  border-radius: 0.5rem;
-  background-color: #1a1a1a;
-  color: #ffffff;
-  font-size: 1rem;
-  transition: border-color 0.2s ease-in-out;
-}
-
-.settingsInput:focus {
-  border-color: var(--color-menu-active-border);
-  outline: none;
-}
-
-.settingsButton {
-  padding: 0.5rem 1rem;
-  border: none;
+  border-collapse: collapse;
   margin-top: 1rem;
-  border-radius: 0.5rem;
-  background-color: var(--color-menu-active-border);
-  color: #1a1a1a;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
-}
-.settingsButton:hover {
-  background-color: var(--color-success-transparent);
-  transform: scale(1.05);
 }
 
-.getTokenText {
-    margin-top: 1rem;
-}
-
-.smallText {
-  font-size: 0.9rem;
-}
-
-.removeToken {
-  font-weight: bold;
+.del-report-img {
+  height: 1.5rem;
+  width: auto;
   cursor: pointer;
 }
-
-.removeToken:hover {
-  cursor: pointer;
-  color: var(--color-menu-active-border);
+.del-report-img:hover {
+  filter: invert(0.7) sepia(1) saturate(5) hue-rotate(300deg);
 }
-
-.apiToken {
-  font-size: 1.2rem;
-  font-weight: bold;
-}
-
-/* Login/Register */
-.loginContainer, .registerContainer, .resetPasswordContainer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-.loginContainer input, .registerContainer input, .resetPasswordContainer input {
-  width: 100%;
-  max-width: 400px;
+#reports-table th, #reports-table td {
+  border: 1px solid #444;
   padding: 0.5rem;
-  margin: 1rem 0;
-  border: 2px solid #ffffff33;
-  border-radius: 0.5rem;
-  background-color: #1a1a1a;
-  color: #ffffff;
-  font-size: 1rem;
-  transition: border-color 0.2s ease-in-out;
+  text-align: left;
 }
-.loginContainer input:focus, .registerContainer input:focus, .resetPasswordContainer input:focus {
-  border-color: var(--color-menu-active-border);
-  outline: none;
+#reports-table th {
+  background-color: #333;
 }
-.loginButton, .registerButton, .resetButton {
-  padding: 0.5rem 1rem;
-  border: none;
-  margin-top: 1rem;
-  border-radius: 0.5rem;
-  background-color: var(--color-menu-active-border);
-  color: #1a1a1a;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+#reports-table tr:nth-child(even) {
+  background-color: #2a2a2a;
 }
-.loginButton:hover, .registerButton:hover, .resetButton:hover {
-  background-color: var(--color-success-transparent);
-  transform: scale(1.05);
-}
-.loginContainer form, .registerContainer form, .resetPasswordContainer form {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
+#reports-table tr:hover {
+  background-color: #3a3a3a;
 }
 
 /* Mobile screens */

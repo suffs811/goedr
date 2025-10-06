@@ -80,9 +80,14 @@ func Del(q string) map[string]any {
 	for k := range items {
 		if k == q {
 			delete(items, k)
+			data, err := json.MarshalIndent(items, "", "  ")
+			echeck(err)
+			err = os.WriteFile(dbFile, data, 0644)
+			echeck(err)
 			return items
 		}
 	}
+
 	return nil
 }
 
@@ -94,9 +99,10 @@ func New(r SecurityReport) bool {
 
 	// Convert SecurityReport to json
 	items[r.Timestamp] = map[string]any{
-		"ip":   r.Ips,
-		"hash": r.Hashes,
-		"cmd":  r.Cmds,
+		"timestamp": r.Timestamp,
+		"ip":        r.Ips,
+		"hash":      r.Hashes,
+		"cmd":       r.Cmds,
 	}
 
 	// Write back to reports.json

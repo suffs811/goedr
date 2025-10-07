@@ -28,6 +28,9 @@ var (
 	// Malicious IPs and hashes
 	malIps    []string
 	malHashes []string
+
+	// Settings
+	scanSettings godb.ScanSettings
 )
 
 func echeck(e error) {
@@ -40,11 +43,29 @@ func logg(s any) {
 	log.Println(s)
 }
 
-func Start() godb.SecurityReport {
-	FetchAssets()
-	CheckHashes()
-	CheckIps()
-	// CheckCmds()
+func Start() any {
+	scanSettings := godb.FetchSettings()
+
+	scanIps, _ := scanSettings["scanIps"].(bool)
+	scanHashes, _ := scanSettings["scanHashes"].(bool)
+
+	if !scanIps && !scanHashes {
+		logg("No scan types selected. Exiting scan...")
+		return nil
+	} else {
+		FetchAssets()
+		if scanIps {
+			CheckIps()
+		} else {
+			logg("Skipping IP scan...")
+		}
+		if scanHashes {
+			CheckHashes()
+		} else {
+			logg("Skipping hash scan...")
+		}
+		// CheckCmds()
+	}
 
 	// Create new SecurityReport struct
 	timestamp := strconv.FormatInt(time.Now().UTC().UnixMilli(), 10)
@@ -139,10 +160,29 @@ func getFileHash(localFile string) string {
 
 func CheckHashes() {
 	homeDir := os.Getenv("HOME")
-	dirsToCheck := []string{homeDir + "/Desktop", homeDir + "/Downloads", homeDir + "/Documents"}
+	dirsToCheck := []string{homeDir, homeDir + "/Desktop", homeDir + "/Downloads", homeDir + "/Documents"}
 
-	if runtime.GOOS == "windows" {
+	switch runtime.GOOS {
+	case "windows":
 		dirsToCheck = append(dirsToCheck, "C:/Windows/Temp")
+	case "darwin":
+		dirsToCheck = append(dirsToCheck, "/tmp")
+	case "linux":
+		dirsToCheck = append(dirsToCheck, "/tmp")
+	}
+
+	if scanSettings.ScannedDirs != nil {
+		for _, dir := range scanSettings.ScannedDirs {
+			dirsToCheck = append(dirsToCheck, string(dir))
+		}
+	}
+
+	for _, dir := range dirsToCheck {
+		if slices.Contains(scanSettings.ExclDirs, dir) {
+			logg("Excluding directory from scan: " + dir)
+			// Remove dir from dirsToCheck
+			dirsToCheck = slices.Delete(dirsToCheck, slices.Index(dirsToCheck, dir), slices.Index(dirsToCheck, dir)+1)
+		}
 	}
 
 	var filesToCheck []string
@@ -156,6 +196,15 @@ func CheckHashes() {
 			}
 		}
 	}
+
+	for _, localFile := range filesToCheck {
+		if slices.Contains(scanSettings.ExclHashes, localFile) {
+			logg("Excluding file from hash scan: " + localFile)
+			// Remove localFile from filesToCheck
+			filesToCheck = slices.Delete(filesToCheck, slices.Index(filesToCheck, localFile), slices.Index(filesToCheck, localFile)+1)
+		}
+	}
+
 	for _, localFile := range filesToCheck {
 		localHash := getFileHash(localFile)
 		for _, ctiHash := range ctiHashes {

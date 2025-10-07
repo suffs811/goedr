@@ -21,13 +21,14 @@ func Init() {
 	r := gin.Default()
 
 	// Creation endpoints
-	//r.POST("/users", func(c *gin.Context) { createUser(c, db) })
+	r.POST("/s/updatesettings", func(c *gin.Context) { updateSettings(c) })
 
 	// Listing endpoints
 	r.GET("/s/dashboard", func(c *gin.Context) { getReports(c) })
 	r.GET("/s/delete", func(c *gin.Context) { delReport(c) })
 	r.GET("/s/start", func(c *gin.Context) { startScan(c) })
 	r.GET("/s/scanstatus", func(c *gin.Context) { scanStatus(c) })
+	r.GET("/s/settings", func(c *gin.Context) { getSettings(c) })
 
 	// Explicitly serve index.html at the root
 	r.Static("/assets", "./dist/assets")
@@ -79,14 +80,24 @@ func delReport(c *gin.Context) {
 func startScan(c *gin.Context) {
 	reportStatus = "scanning"
 	report := reporter.Start()
-	log.Println(report)
-	ok := godb.New(report)
+	log.Println("report: ", report)
+	if report == nil {
+		reportStatus = "idle"
+		c.JSON(http.StatusOK, gin.H{"message": "No scan types selected. Exiting scan..."})
+		return
+	}
+	securityReport, ok := report.(godb.SecurityReport)
 	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid report type"})
+		return
+	}
+	success := godb.New(securityReport)
+	if !success {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Set status to complete for 5 seconds
+	// Set status to complete for 2 seconds
 	go func() {
 		reportStatus = "completed"
 		// After 2 seconds, set back to idle
@@ -100,4 +111,27 @@ func startScan(c *gin.Context) {
 
 func scanStatus(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": reportStatus})
+}
+
+func getSettings(c *gin.Context) {
+	settings := godb.FetchSettings()
+	c.JSON(http.StatusOK, gin.H{"settings": settings})
+}
+
+func updateSettings(c *gin.Context) {
+	// Parse JSON body and set to settings variable
+	settings := make(map[string]any)
+
+	if err := c.BindJSON(&settings); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload."})
+		return
+	}
+
+	// Update settings in the database
+	update := godb.UpdateSettings(settings)
+	if update {
+		c.JSON(http.StatusCreated, gin.H{"settings": settings})
+	} else {
+		c.JSON(500, gin.H{"error": "Failed to update settings."})
+	}
 }

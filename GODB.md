@@ -1,4 +1,6 @@
-# Working with godb
+# Working with GoDB
+
+GoDB is a simple noSQL ORM for creating, adding, fetching, removing, clearing, and modifying JSON data for GoEDR.
 
 ### Close the DB on program exit
 ```go

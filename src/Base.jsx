@@ -3,7 +3,7 @@ import ex from "./assets/ex.png"
 import './App.css'
 
 function Base() {
-  const [reports, setReports] = useState([])
+  const [reports, setReports] = useState(null)
 
   useEffect(() => {
     fetch('/s/dashboard')
@@ -41,6 +41,10 @@ function Base() {
       .catch(err => {
         console.error('Error deleting report:', err);
       });
+  }
+
+    if (!reports) {
+    return <div className='main' style={{marginTop: "2rem"}}>Loading...</div>
   }
 
   return (

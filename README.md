@@ -6,12 +6,13 @@
 ### Functionalities
 1. Checks temp, downloads, desktop, document folders against a list of malicious file hashes
 2. Tests network connections against list of malicious IPs
-3. Runs daily scans
+3. Runs daily scans and provides a report in the user interface
 
 ### Setup
-1. npm run build
-2. go build main.go
-3. ./main
+1. npm i
+2. npm run build
+3. go build main.go
+4. ./main
 
 ### Coming soon
 Analysis command-line history for malicious stuff
@@ -19,4 +20,3 @@ Continuous monitoring
 Response actions
 Export reports as csv
 View details for single report
-Settings: add/remove dirs to scan, exclude specific hashes, turn off/on ips/hashes scanning, 

@@ -1,0 +1,109 @@
+import { useEffect, useState } from 'react'
+import './App.css'
+
+function Settings() {
+  const [settings, setSettings] = useState(null)
+  // settings := map[string]any{"scannedDirs": []string{}, "exclDirs": []string{}, "exclHashes": []string{}, "scanIps": true, "scanHashes": true}
+  const [success, setSuccess] = useState("");
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    fetch('/s/settings')
+      .then(response => response.json())
+      .then(data => {
+        setSettings(data.settings);
+        })
+      .catch(err => {
+        console.error('Error fetching reports:', err);
+        setError("Error fetching settings. Please try again.");
+        setTimeout(() => setError(""), 3000);
+      });
+  }, []);
+
+  function updateSettings(newSettings) {
+    fetch('/s/updatesettings', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(newSettings),
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.error) {
+        setSettings(settings);
+        setError("Error updating settings. Please try again.");
+        setTimeout(() => setError(""), 3000);
+        return;
+      }
+      setSettings(data.settings);
+      setSuccess("Settings updated successfully!");
+      setTimeout(() => setSuccess(""), 3000);
+    })
+    .catch(err => {
+      console.error('Error updating settings:', err);
+      setError("Error updating settings. Please try again.");
+      setTimeout(() => setError(""), 3000);
+    });
+  }
+
+  if (!settings) {
+    return <div className='main' style={{marginTop: "2rem"}}>Loading...</div>
+  }
+
+  return (
+    <>
+      <div className='main'>
+        <h1>Settings</h1>
+        <p>Configure your GoEDR instance</p>
+        <div id="settings-container">
+          <div>
+            <h3>Scanned Directories</h3>
+            <p>Directories to scan for threats</p>
+            <textarea value={settings.scannedDirs?.join('\n')} onChange={(e) => {
+              const dirs = e.target.value.split('\n').map(dir => dir.trim()).filter(dir => dir !== '');
+              setSettings({...settings, scannedDirs: dirs});
+            }} rows={10} cols={50} />
+          </div>
+          <div>
+            <h3>Excluded Directories</h3>
+            <p>Directories to exclude from scans</p>
+            <textarea value={settings.exclDirs?.join('\n')} onChange={(e) => {
+              const dirs = e.target.value.split('\n').map(dir => dir.trim()).filter(dir => dir !== '');
+              setSettings({...settings, exclDirs: dirs});
+            }} rows={10} cols={50} />
+          </div>
+          <div>
+            <h3>Excluded Hashes</h3>
+            <p>File hashes to exclude from scans</p>
+            <textarea value={settings.exclHashes?.join('\n')} onChange={(e) => {
+              const hashes = e.target.value.split('\n').map(hash => hash.trim()).filter(hash => hash !== '');
+              setSettings({...settings, exclHashes: hashes});
+            }} rows={10} cols={50} />
+          </div>
+          <div>
+            <h3>Scan IPs</h3>
+            <p>Whether to scan for suspicious IP addresses</p>
+            <input type="checkbox" checked={settings.scanIps} onChange={(e) => {
+              setSettings({...settings, scanIps: e.target.checked});
+            }} />
+          </div>
+          <div>
+            <h3>Scan Hashes</h3>
+            <p>Whether to scan for known malicious file hashes</p>
+            <input type="checkbox" checked={settings.scanHashes} onChange={(e) => {
+              setSettings({...settings, scanHashes: e.target.checked});
+            }} />
+          </div>
+        </div>
+        <div style={{marginTop: "1rem", display: "flex", flexDirection: "column", alignItems: "center"}}>
+          <button onClick={() => updateSettings(settings)}>Save Settings</button>
+          {success && <span className='success' style={{marginTop: "2rem"}}>Settings saved successfully!</span>}
+          {error && <span className='error' style={{marginTop: "2rem"}}>Error saving settings. Please try again.</span>}
+        </div>
+      </div>
+    </>
+  )
+}
+
+export default Settings;

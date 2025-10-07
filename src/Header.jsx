@@ -16,7 +16,10 @@ function Header() {
             setScanStatus(data.status);
             if (data.status === "completed") {
               handleScanComplete();
-            }
+            } else if (data.status === "idle") {
+              setScanStatus("idle");
+              location.reload();
+            } 
           } else {
             setScanStatus("idle");
           }
@@ -120,8 +123,8 @@ function Header() {
       </div>
       <div className='headerMenu'>
         <ul>
-          <Link to="/"><li className='menuItem menuActive' onClick={menuClicked}>Home</li></Link>
-          <Link to="/dashboard"><li className='menuItem menuActive' onClick={menuClicked}>Dashboard</li></Link>
+          <Link to="/"><li className='menuItem menuActive' onClick={menuClicked}>Dashboard</li></Link>
+          <Link to="/settings"><li className='menuItem menuActive' onClick={menuClicked}>Settings</li></Link>
           <li className='menuItem menuSep'></li>
           <a href="https://github.com/suffs811" target="_blank"><li className='menuItem'>GitHub <span style={{color: '#F8F812'}}>{'\u2197'}</span></li></a>
         </ul>

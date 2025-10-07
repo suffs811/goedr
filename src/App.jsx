@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import './App.css'
+import Settings from "./Settings.jsx"
 import Header from "./Header.jsx"
 import Base from "./Base.jsx"
 import Footer from "./Footer.jsx";
@@ -13,6 +14,8 @@ function App() {
       <Routes>
         <Route path="/" element={<Base />}></Route>
         <Route index element={<Base />}></Route>
+
+        <Route path="/settings" element={<Settings />}></Route>
 
         <Route path="*" element={<Base />}></Route>
       </Routes>

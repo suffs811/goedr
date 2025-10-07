@@ -258,12 +258,16 @@ footer {
   background-color: #1a1a1a;
   color: #ffffff;
   position: relative;
-  padding: 0 1rem;
+  padding: 0;
   bottom: 0;
   left: 0;
   width: 100%;
   display: flex;
   justify-content: center;
+  align-items: center;
+  height: 3rem;
+  font-size: 0.9rem;
+  user-select: none;
 }
 
 /* Dashboard */
@@ -302,6 +306,37 @@ footer {
 #reports-table tr:hover {
   background-color: #3a3a3a;
 }
+
+/* Settings */
+#settings-container {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  text-align: left;
+}
+#settings-form {
+  display: flex;
+  flex-direction: column;
+}
+#settings-form label {
+  margin-top: 1rem;
+  font-weight: bold;
+}
+
+#settings-form input[type="text"] {
+  width: 100%;
+  padding: 0.5rem;
+  margin-top: 0.5rem;
+  border: 1px solid #444;
+  border-radius: 4px;
+  background-color: var(--color-bg-alt);
+  color: #fff;
+}
+
+#settings-form input[type="radio"]:hover {
+  cursor: pointer;
+}
+
 
 /* Mobile screens */
 @media screen and (max-width: 768px) {

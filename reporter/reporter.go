@@ -58,11 +58,13 @@ func Start() any {
 			CheckIps()
 		} else {
 			logg("Skipping IP scan...")
+			malIps = []string{"IP connections not scanned"}
 		}
 		if scanHashes {
 			CheckHashes()
 		} else {
 			logg("Skipping hash scan...")
+			malHashes = []string{"File hashes not scanned"}
 		}
 		// CheckCmds()
 	}
@@ -70,11 +72,13 @@ func Start() any {
 	// Create new SecurityReport struct
 	timestamp := strconv.FormatInt(time.Now().UTC().UnixMilli(), 10)
 	var report godb.SecurityReport
-	var ips, hashes, cmds []string
 	report.Timestamp = timestamp
-	report.Ips = ips
-	report.Hashes = hashes
-	report.Cmds = cmds
+	report.Ips = malIps
+	report.Hashes = malHashes
+	// report.Cmds = cmds
+
+	// Reset malIps and malHashes for next scan
+	malHashes, malIps = []string{}, []string{}
 
 	return report
 }

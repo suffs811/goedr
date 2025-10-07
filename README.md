@@ -10,6 +10,11 @@
 2. Tests network connections against list of malicious IPs
 3. Runs daily scans and provides a report in the user interface
 
+### Tech Stack
+- React/Vite frontend
+- Go/Gin backend server
+- Custom nosql ORM written in Go
+
 ### Setup
 1. npm i
 2. npm run build

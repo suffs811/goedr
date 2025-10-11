@@ -21,6 +21,9 @@ function Settings() {
   }, []);
 
   function updateSettings(newSettings) {
+    newSettings.ScannedDirs = newSettings.ScannedDirs.filter(dir => dir !== "");
+    newSettings.ExclDirs = newSettings.ExclDirs.filter(dir => dir !== "");
+    newSettings.ExclHashes = newSettings.ExclHashes.filter(hash => hash !== "");
     fetch('/s/updatesettings', {
       method: 'POST',
       headers: {
@@ -60,39 +63,39 @@ function Settings() {
           <div>
             <h3>Scanned Directories</h3>
             <p>Directories to scan for threats</p>
-            <textarea value={settings.scannedDirs?.join('\n')} onChange={(e) => {
-              const dirs = e.target.value.split('\n').map(dir => dir.trim()).filter(dir => dir !== '');
-              setSettings({...settings, scannedDirs: dirs});
+            <textarea value={settings.ScannedDirs?.join('\n')} onChange={(e) => {
+              const dirs = e.target.value.split('\n').map(dir => dir.trim());
+              setSettings({...settings, ScannedDirs: dirs});
             }} rows={10} cols={50} />
           </div>
           <div>
             <h3>Excluded Directories</h3>
             <p>Directories to exclude from scans</p>
-            <textarea value={settings.exclDirs?.join('\n')} onChange={(e) => {
-              const dirs = e.target.value.split('\n').map(dir => dir.trim()).filter(dir => dir !== '');
-              setSettings({...settings, exclDirs: dirs});
+            <textarea value={settings.ExclDirs?.join('\n')} onChange={(e) => {
+              const dirs = e.target.value.split('\n').map(dir => dir.trim());
+              setSettings({...settings, ExclDirs: dirs});
             }} rows={10} cols={50} />
           </div>
           <div>
             <h3>Excluded Hashes</h3>
             <p>File hashes to exclude from scans</p>
-            <textarea value={settings.exclHashes?.join('\n')} onChange={(e) => {
-              const hashes = e.target.value.split('\n').map(hash => hash.trim()).filter(hash => hash !== '');
-              setSettings({...settings, exclHashes: hashes});
+            <textarea value={settings.ExclHashes?.join('\n')} onChange={(e) => {
+              const hashes = e.target.value.split('\n').map(hash => hash.trim());
+              setSettings({...settings, ExclHashes: hashes});
             }} rows={10} cols={50} />
           </div>
           <div>
             <h3>Scan IPs</h3>
             <p>Whether to scan for suspicious IP addresses</p>
-            <input type="checkbox" checked={settings.scanIps} onChange={(e) => {
-              setSettings({...settings, scanIps: e.target.checked});
+            <input type="checkbox" checked={settings.ScanIps} onChange={(e) => {
+              setSettings({...settings, ScanIps: e.target.checked});
             }} />
           </div>
           <div>
             <h3>Scan Hashes</h3>
             <p>Whether to scan for known malicious file hashes</p>
-            <input type="checkbox" checked={settings.scanHashes} onChange={(e) => {
-              setSettings({...settings, scanHashes: e.target.checked});
+            <input type="checkbox" checked={settings.ScanHashes} onChange={(e) => {
+              setSettings({...settings, ScanHashes: e.target.checked});
             }} />
           </div>
         </div>

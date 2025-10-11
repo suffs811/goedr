@@ -171,7 +171,7 @@ func CloseDB() {
 }
 
 // Settings
-func FetchSettings() map[string]any {
+func FetchSettings() ScanSettings {
 	fileStat, e := os.Stat(settingsdb.Name())
 	echeck(e)
 	fileSize := fileStat.Size()
@@ -179,12 +179,29 @@ func FetchSettings() map[string]any {
 	echeck(e)
 
 	if fileSize != 0 {
-		var settings map[string]any
+		var settings ScanSettings
 		e = json.Unmarshal(file, &settings)
 		echeck(e)
 
+		if len(settings.ScannedDirs) == 0 {
+			log.Println("ScannedDirs is empty. Adding default directories.")
+			homeDir := os.Getenv("HOME")
+			dirsToCheck := []string{homeDir, homeDir + "/Desktop", homeDir + "/Downloads", homeDir + "/Documents"}
+
+			switch runtime.GOOS {
+			case "windows":
+				dirsToCheck = append(dirsToCheck, "C:/Windows/Temp")
+			case "darwin":
+				dirsToCheck = append(dirsToCheck, "/tmp")
+			case "linux":
+				dirsToCheck = append(dirsToCheck, "/tmp")
+			}
+
+			settings.ScannedDirs = dirsToCheck
+		}
 		return settings
 	} else {
+		// if settings file is empty, set defaults
 		homeDir := os.Getenv("HOME")
 		dirsToCheck := []string{homeDir, homeDir + "/Desktop", homeDir + "/Downloads", homeDir + "/Documents"}
 
@@ -196,13 +213,29 @@ func FetchSettings() map[string]any {
 		case "linux":
 			dirsToCheck = append(dirsToCheck, "/tmp")
 		}
-		settings := map[string]any{"scannedDirs": dirsToCheck, "exclDirs": []string{}, "exclHashes": []string{}, "scanIps": true, "scanHashes": true}
+		settings := ScanSettings{ScannedDirs: dirsToCheck, ExclDirs: []string{}, ExclHashes: []string{}, ScanIps: true, ScanHashes: true}
 		return settings
 	}
 }
 
 func UpdateSettings(submittedSettings map[string]any) bool {
 	settings := submittedSettings
+
+	if len(settings["ScannedDirs"].([]any)) == 0 {
+		log.Println("ScannedDirs is empty. Adding default directories.")
+		homeDir := os.Getenv("HOME")
+		dirsToCheck := []string{homeDir, homeDir + "/Desktop", homeDir + "/Downloads", homeDir + "/Documents"}
+
+		switch runtime.GOOS {
+		case "windows":
+			dirsToCheck = append(dirsToCheck, "C:/Windows/Temp")
+		case "darwin":
+			dirsToCheck = append(dirsToCheck, "/tmp")
+		case "linux":
+			dirsToCheck = append(dirsToCheck, "/tmp")
+		}
+		settings["ScannedDirs"] = dirsToCheck
+	}
 
 	// Write back to settings.json
 	data, err := json.MarshalIndent(settings, "", "  ")

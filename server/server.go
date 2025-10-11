@@ -79,6 +79,7 @@ func delReport(c *gin.Context) {
 
 func startScan(c *gin.Context) {
 	reportStatus = "scanning"
+	log.Println("Starting scan...")
 	report := reporter.Start()
 	log.Println("report: ", report)
 	if report == nil {

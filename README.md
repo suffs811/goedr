@@ -22,7 +22,7 @@
 4. ./main
 
 ### Coming soon
-Analysis command-line history for malicious stuff
+Analyze command-line history for malicious stuff
 Continuous monitoring
 Response actions
 Export reports as csv

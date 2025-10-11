@@ -6,10 +6,11 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"runtime"
+	"path/filepath"
 	"slices"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/shirou/gopsutil/v4/net"
@@ -46,8 +47,8 @@ func logg(s any) {
 func Start() any {
 	scanSettings := godb.FetchSettings()
 
-	scanIps, _ := scanSettings["scanIps"].(bool)
-	scanHashes, _ := scanSettings["scanHashes"].(bool)
+	scanIps := scanSettings.ScanIps
+	scanHashes := scanSettings.ScanHashes
 
 	if !scanIps && !scanHashes {
 		logg("No scan types selected. Exiting scan...")
@@ -84,69 +85,80 @@ func Start() any {
 }
 
 func FetchAssets() {
+	var wg sync.WaitGroup
 	var body []byte
 	var ipsRaw []string
 	var hashesRaw []string
+
 	// Get IPs
-	resp, err := http.Get("https://binarydefense.com/banlist.txt")
-	if err != nil {
-		logg("Error fetching ips... Using previous list.")
-		// Get working directory
-		dir, err := os.Getwd()
-		echeck(err)
-		dir += "/data/"
-		file, e := os.ReadFile(dir + "full_ips.txt")
-		echeck(e)
-		ipsRaw = strings.Split(string(file), "\n")
-	} else {
-		defer resp.Body.Close()
-		body, err = io.ReadAll(resp.Body)
-		echeck(err)
-		ipsRaw = strings.Split(string(body), "\n")
-	}
-
-	for _, i := range ipsRaw {
-		if !strings.Contains(i, "#") && i != "" {
-			ctiIps = append(ctiIps, i)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		resp, err := http.Get("https://binarydefense.com/banlist.txt")
+		if err != nil {
+			logg("Error fetching ips... Using previous list.")
+			// Get working directory
+			dir, err := os.Getwd()
+			echeck(err)
+			dir += "/data/"
+			file, e := os.ReadFile(dir + "full_ips.txt")
+			echeck(e)
+			ipsRaw = strings.Split(string(file), "\n")
+		} else {
+			defer resp.Body.Close()
+			body, err = io.ReadAll(resp.Body)
+			echeck(err)
+			ipsRaw = strings.Split(string(body), "\n")
 		}
-	}
 
-	// Get hashes
-	resp, err = http.Get("https://bazaar.abuse.ch/export/txt/md5/recent/")
-	if err != nil {
-		logg("Error fetching recent hashes... Using previous list.")
-		// Get full list of hashes
-		dir, err := os.Getwd()
-		echeck(err)
-		dir += "/data/"
-		file, e := os.ReadFile(dir + "full_hashes.txt")
-		echeck(e)
-		hashesRaw = strings.Split(string(file), "\n")
-	} else {
-		// Get full list of hashes
-		dir, err := os.Getwd()
-		echeck(err)
-		dir += "/data/"
-		file, e := os.ReadFile(dir + "full_hashes.txt")
-		echeck(e)
-		hashesRaw = strings.Split(string(file), "\n")
-
-		// Add recent hashes to full list
-		defer resp.Body.Close()
-		body, err = io.ReadAll(resp.Body)
-		echeck(err)
-		forHashesRaw := strings.Split(string(body), "\n")
-		for _, h := range forHashesRaw {
-			if !slices.Contains(hashesRaw, h) {
-				hashesRaw = append(hashesRaw, h)
+		for _, i := range ipsRaw {
+			if !strings.Contains(i, "#") && i != "" {
+				ctiIps = append(ctiIps, i)
 			}
 		}
-	}
-	for _, h := range hashesRaw {
-		if !strings.Contains(h, "#") && h != "" {
-			ctiHashes = append(ctiHashes, h)
+	}()
+
+	// Get hashes
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		resp, err := http.Get("https://bazaar.abuse.ch/export/txt/md5/recent/")
+		if err != nil {
+			logg("Error fetching recent hashes... Using previous list.")
+			// Get full list of hashes
+			dir, err := os.Getwd()
+			echeck(err)
+			dir += "/data/"
+			file, e := os.ReadFile(dir + "full_hashes.txt")
+			echeck(e)
+			hashesRaw = strings.Split(string(file), "\n")
+		} else {
+			// Get full list of hashes
+			dir, err := os.Getwd()
+			echeck(err)
+			dir += "/data/"
+			file, e := os.ReadFile(dir + "full_hashes.txt")
+			echeck(e)
+			hashesRaw = strings.Split(string(file), "\n")
+
+			// Add recent hashes to full list
+			defer resp.Body.Close()
+			body, err = io.ReadAll(resp.Body)
+			echeck(err)
+			forHashesRaw := strings.Split(string(body), "\n")
+			for _, h := range forHashesRaw {
+				if !slices.Contains(hashesRaw, h) {
+					hashesRaw = append(hashesRaw, h)
+				}
+			}
 		}
-	}
+		for _, h := range hashesRaw {
+			if !strings.Contains(h, "#") && h != "" {
+				ctiHashes = append(ctiHashes, h)
+			}
+		}
+	}()
+	wg.Wait()
 }
 
 func getFileHash(localFile string) string {
@@ -163,59 +175,71 @@ func getFileHash(localFile string) string {
 }
 
 func CheckHashes() {
-	homeDir := os.Getenv("HOME")
-	dirsToCheck := []string{homeDir, homeDir + "/Desktop", homeDir + "/Downloads", homeDir + "/Documents"}
+	var wg sync.WaitGroup
+	filesCh := make(chan string)
+	resultCh := make(chan string)
 
-	switch runtime.GOOS {
-	case "windows":
-		dirsToCheck = append(dirsToCheck, "C:/Windows/Temp")
-	case "darwin":
-		dirsToCheck = append(dirsToCheck, "/tmp")
-	case "linux":
-		dirsToCheck = append(dirsToCheck, "/tmp")
+	workers := 50
+	for range workers {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for localFile := range filesCh {
+				// Exclude hashes provided in Settings
+				localFileHash := getFileHash(localFile)
+				if slices.Contains(scanSettings.ExclHashes, localFileHash) {
+					logg("Excluding file from hash scan: " + localFile)
+					continue
+				}
+
+				// Compare local file hashes with hash db
+				for _, ctiHash := range ctiHashes {
+					if ctiHash == localFileHash {
+						resultCh <- localFile
+					}
+				}
+			}
+		}()
 	}
 
-	if scanSettings.ScannedDirs != nil {
-		for _, dir := range scanSettings.ScannedDirs {
-			dirsToCheck = append(dirsToCheck, string(dir))
-		}
-	}
+	// Wait for all goroutines to finish
+	go func() {
+		wg.Wait()
+		close(resultCh)
+	}()
 
-	for _, dir := range dirsToCheck {
-		if slices.Contains(scanSettings.ExclDirs, dir) {
-			logg("Excluding directory from scan: " + dir)
-			// Remove dir from dirsToCheck
-			dirsToCheck = slices.Delete(dirsToCheck, slices.Index(dirsToCheck, dir), slices.Index(dirsToCheck, dir)+1)
-		}
-	}
+	// Add dirs provided in Settings
+	dirsToCheck := scanSettings.ScannedDirs
 
-	var filesToCheck []string
-
-	for _, dir := range dirsToCheck {
-		filesFound, err := os.ReadDir(dir)
-		echeck(err)
-		for _, file := range filesFound {
-			if !file.IsDir() && file.Name()[0] != '.' {
-				filesToCheck = append(filesToCheck, file.Name())
+	go func() {
+		defer close(filesCh)
+		// Exclude dirs provided in Settings
+		for _, dir := range dirsToCheck {
+			if slices.Contains(scanSettings.ExclDirs, dir) {
+				logg("Excluding directory from scan: " + dir)
+				// Skip dir if excluded in Settings
+				continue
 			}
 		}
-	}
 
-	for _, localFile := range filesToCheck {
-		if slices.Contains(scanSettings.ExclHashes, localFile) {
-			logg("Excluding file from hash scan: " + localFile)
-			// Remove localFile from filesToCheck
-			filesToCheck = slices.Delete(filesToCheck, slices.Index(filesToCheck, localFile), slices.Index(filesToCheck, localFile)+1)
-		}
-	}
-
-	for _, localFile := range filesToCheck {
-		localHash := getFileHash(localFile)
-		for _, ctiHash := range ctiHashes {
-			if ctiHash == localFile {
-				malHashes = append(malHashes, localHash)
+		// Get each file within each dir to scan
+		for _, dir := range dirsToCheck {
+			filesFound, err := os.ReadDir(dir)
+			if err != nil {
+				logg(err)
+				continue
+			}
+			for _, file := range filesFound {
+				// Exclude hidden files
+				if !file.IsDir() && file.Name()[0] != '.' {
+					filesCh <- filepath.Join(dir, file.Name())
+				}
 			}
 		}
+	}()
+
+	for file := range resultCh {
+		malHashes = append(malHashes, file)
 	}
 }
 

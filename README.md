@@ -22,8 +22,11 @@
 4. ./main
 
 ### Coming soon
-Analyze command-line history for malicious stuff
-Continuous monitoring
-Response actions
-Export reports as csv
-View details for single report
+- Analyze command-line history for malicious stuff
+- Continuous monitoring
+- Response actions
+- Export reports as csv
+- View details for single report
+
+
+<img width="2864" height="1504" alt="GoEDR Dashboard" src="https://github.com/user-attachments/assets/773ec949-0972-4845-a5c6-42913fd0ee01" />

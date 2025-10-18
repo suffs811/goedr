@@ -3,7 +3,7 @@
 > Just a fun project I'm working on to learn Go
 
 # GoEDR
-#### Simple single-host EDR written in Go
+#### Simple cross-platform, single-host EDR written in Go
 
 ### Functionalities
 1. Checks temp, downloads, desktop, document folders against a list of malicious file hashes

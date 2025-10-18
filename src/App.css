@@ -273,7 +273,6 @@ footer {
 /* Dashboard */
 #reports-container {
   width: 100%;
-  max-width: 900px;
   margin: 0 auto;
   overflow-x: auto;
 }
@@ -296,6 +295,8 @@ footer {
   border: 1px solid #444;
   padding: 0.5rem 1rem;
   text-align: left;
+  max-width: 20rem;
+  overflow-x: scroll;
 }
 #reports-table th {
   background-color: #333;

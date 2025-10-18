@@ -11,15 +11,17 @@ type SecurityReport struct {
 	Timestamp string
 	Ips       []string
 	Hashes    []string
-	Cmds      []string
+	Procs     []string
 }
 
 type ScanSettings struct {
 	ScannedDirs []string
 	ExclDirs    []string
 	ExclHashes  []string
+	ExclProcs   []string
 	ScanIps     bool
 	ScanHashes  bool
+	ScanProcs   bool
 }
 
 var (
@@ -121,7 +123,7 @@ func New(r SecurityReport) bool {
 		"timestamp": r.Timestamp,
 		"ip":        r.Ips,
 		"hash":      r.Hashes,
-		"cmd":       r.Cmds,
+		"proc":      r.Procs,
 	}
 
 	// Write back to reports.json
@@ -213,7 +215,7 @@ func FetchSettings() ScanSettings {
 		case "linux":
 			dirsToCheck = append(dirsToCheck, "/tmp")
 		}
-		settings := ScanSettings{ScannedDirs: dirsToCheck, ExclDirs: []string{}, ExclHashes: []string{}, ScanIps: true, ScanHashes: true}
+		settings := ScanSettings{ScannedDirs: dirsToCheck, ExclDirs: []string{}, ExclHashes: []string{}, ExclProcs: []string{}, ScanIps: true, ScanHashes: true, ScanProcs: true}
 		return settings
 	}
 }

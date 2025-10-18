@@ -1,4 +1,4 @@
-package reporter
+package scanner
 
 import (
 	"crypto/md5"
@@ -13,22 +13,25 @@ import (
 	"sync"
 	"time"
 
-	"github.com/shirou/gopsutil/v4/net"
-
 	"github.com/suffs811/goedr/godb"
+
+	gp "github.com/mitchellh/go-ps"
+	"github.com/shirou/gopsutil/v4/net"
 )
 
 var (
 	// IPs and hashes from CTI feeds
 	ctiIps    []string
 	ctiHashes []string
+	ctiProcs  []string
 
-	// Remote IPs from netstat
+	// IPs connections from netstat
 	localIps []string
 
-	// Malicious IPs and hashes
+	// Malicious IPs and hashes and processes
 	malIps    []string
 	malHashes []string
+	malProcs  []string
 
 	// Settings
 	scanSettings godb.ScanSettings
@@ -49,8 +52,9 @@ func Start() any {
 
 	scanIps := scanSettings.ScanIps
 	scanHashes := scanSettings.ScanHashes
+	scanProcs := scanSettings.ScanProcs
 
-	if !scanIps && !scanHashes {
+	if !scanIps && !scanHashes && !scanProcs {
 		logg("No scan types selected. Exiting scan...")
 		return nil
 	} else {
@@ -67,7 +71,12 @@ func Start() any {
 			logg("Skipping hash scan...")
 			malHashes = []string{"File hashes not scanned"}
 		}
-		// CheckCmds()
+		if scanProcs {
+			PsScan()
+		} else {
+			logg("Skipping process scan...")
+			malProcs = []string{"Processes not scanned"}
+		}
 	}
 
 	// Create new SecurityReport struct
@@ -76,10 +85,10 @@ func Start() any {
 	report.Timestamp = timestamp
 	report.Ips = malIps
 	report.Hashes = malHashes
-	// report.Cmds = cmds
+	report.Procs = malProcs
 
-	// Reset malIps and malHashes for next scan
-	malHashes, malIps = []string{}, []string{}
+	// Reset malIps and malHashes and malProcs for next scan
+	malHashes, malIps, malProcs = []string{}, []string{}, []string{}
 
 	return report
 }
@@ -243,10 +252,6 @@ func CheckHashes() {
 	}
 }
 
-func CheckCmds() {
-
-}
-
 func CheckIps() {
 	conns, err := net.Connections("tcp")
 	echeck(err)
@@ -259,6 +264,33 @@ func CheckIps() {
 		for _, ctiIp := range ctiIps {
 			if ctiIp == localIp {
 				malIps = append(malIps, localIp)
+			}
+		}
+	}
+}
+
+// Get the list of suspicious processes from data/procs.txt
+func PsScan() {
+	// Get CTI processes from data/
+	dir, err := os.Getwd()
+	echeck(err)
+	dir += "/data/"
+	file, e := os.ReadFile(dir + "procs.txt")
+	echeck(e)
+	ctiProcs = strings.Split(string(file), "\n")
+
+	// Get local running processes
+	localProcs, err := gp.Processes()
+	if err != nil {
+		log.Println("Failed to get process list")
+		return
+	}
+	for _, i := range localProcs {
+		localProc := strings.ToLower(i.Executable())
+		for _, ctiProc := range ctiProcs {
+			if strings.Contains(localProc, ctiProc) {
+				malProcs = append(malProcs, localProc)
+				break
 			}
 		}
 	}

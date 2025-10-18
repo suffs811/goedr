@@ -59,7 +59,7 @@ function Base() {
                     <th>Timestamp</th>
                     <th>Ips</th>
                     <th>Hashes</th>
-                    {/* <th>Cmds</th> */}
+                    <th>Processes</th>
                     <th></th>
                 </tr>
             </thead>
@@ -69,7 +69,7 @@ function Base() {
                   <td>{report.date}</td>
                   <td>{report.ip?.join(', ') || "No malicious IPs found"}</td>
                   <td>{report.hash?.join(', ') || "No malicious hashes found"}</td>
-                  {/* <td>{report.cmd?.join(', ') || "No malicious commands found"}</td> */}
+                  <td>{report.proc?.join(', ') || "No malicious processes found"}</td>
                   <td onClick={() => deleteReport(report.timestamp)}>
                     <img className="del-report-img" src={ex} alt=" X " />
                   </td>

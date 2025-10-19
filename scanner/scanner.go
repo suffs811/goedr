@@ -250,6 +250,10 @@ func CheckHashes() {
 	for file := range resultCh {
 		malHashes = append(malHashes, file)
 	}
+
+	if len(malHashes) == 0 {
+		malHashes = []string{"No malicious hashes found	"}
+	}
 }
 
 func CheckIps() {
@@ -266,6 +270,10 @@ func CheckIps() {
 				malIps = append(malIps, localIp)
 			}
 		}
+	}
+
+	if len(malIps) == 0 {
+		malIps = []string{"No malicious IPs found"}
 	}
 }
 
@@ -293,5 +301,9 @@ func PsScan() {
 				break
 			}
 		}
+	}
+
+	if len(malProcs) == 0 {
+		malProcs = []string{"No malicious processes found"}
 	}
 }

@@ -307,6 +307,17 @@ footer {
 #reports-table tr:hover {
   background-color: #3a3a3a;
 }
+.reports-header {
+  display: flex;
+  justify-content: flex-end;
+}
+.export-btn {
+  background-color: var(--color-error);
+  color: var(--color-fg);
+  padding: 0.3em 0.6em;
+  font-weight: bold;
+  border: none;
+}
 
 /* Settings */
 #settings-container {

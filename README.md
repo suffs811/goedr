@@ -10,6 +10,7 @@
 2. Tests network connections against list of malicious IPs
 3. Analyzes running processes against known suspicious processes
 4. Runs on-demand scans and provides a report in the user interface
+5. Exports the results to CSV
 
 ### Tech Stack
 - React/Vite frontend
@@ -23,7 +24,6 @@
 4. ./main
 
 ### Coming soon
-- Export reports as csv
 - View details for single report
 - Continuous monitoring
 - Response actions

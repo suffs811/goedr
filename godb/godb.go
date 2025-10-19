@@ -51,11 +51,44 @@ func init() {
 	dbFileReports = dbDir + "reports.json"
 	reportsdb, err = os.OpenFile(dbFileReports, os.O_RDWR|os.O_CREATE, 0644)
 	echeck(err)
+	// If reports is empty, add empty {}
+	emptyReports := isEmptyFile(reportsdb)
+	if emptyReports {
+		// Write back to settings.json
+		defaultReport := make(map[string]string)
+		data, err := json.MarshalIndent(defaultReport, "", "  ")
+		echeck(err)
+		err = os.WriteFile(dbFileReports, data, 0644)
+		echeck(err)
+	}
 
 	// Open or create settings.json
 	dbFileSettings = dbDir + "settings.json"
 	settingsdb, err = os.OpenFile(dbFileSettings, os.O_RDWR|os.O_CREATE, 0644)
 	echeck(err)
+
+	// If settings is empty, add defaults
+	emptySettings := isEmptyFile(settingsdb)
+	if emptySettings {
+		// if settings file is empty, set defaults
+		homeDir := os.Getenv("HOME")
+		dirsToCheck := []string{homeDir, homeDir + "/Desktop", homeDir + "/Downloads", homeDir + "/Documents"}
+
+		switch runtime.GOOS {
+		case "windows":
+			dirsToCheck = append(dirsToCheck, "C:/Windows/Temp")
+		case "darwin":
+			dirsToCheck = append(dirsToCheck, "/tmp")
+		case "linux":
+			dirsToCheck = append(dirsToCheck, "/tmp")
+		}
+		settings := ScanSettings{ScannedDirs: dirsToCheck, ExclDirs: []string{}, ExclHashes: []string{}, ExclProcs: []string{}, ScanIps: true, ScanHashes: true, ScanProcs: true}
+		// Write back to settings.json
+		data, err := json.MarshalIndent(settings, "", "  ")
+		echeck(err)
+		err = os.WriteFile(dbFileSettings, data, 0644)
+		echeck(err)
+	}
 }
 
 func echeck(e error) {
@@ -64,8 +97,16 @@ func echeck(e error) {
 	}
 }
 
+func isEmptyFile(file *os.File) bool {
+	fileStat, e := os.Stat(file.Name())
+	echeck(e)
+	fileSize := fileStat.Size()
+	return fileSize == 0
+}
+
 // Reports
 func FetchAll() map[string]any {
+	var items map[string]any
 	fileStat, e := os.Stat(reportsdb.Name())
 	echeck(e)
 	fileSize := fileStat.Size()
@@ -73,14 +114,13 @@ func FetchAll() map[string]any {
 	echeck(e)
 
 	if fileSize != 0 {
-		var items map[string]any
 		e = json.Unmarshal(file, &items)
 		echeck(e)
-
-		return items
 	} else {
-		return nil
+
 	}
+
+	return items
 }
 
 func Fetch(q string) any {

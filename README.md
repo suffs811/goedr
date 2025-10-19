@@ -20,8 +20,8 @@
 ### Setup
 1. npm i
 2. npm run build
-3. go build main.go
-4. ./main
+3. go build goedr.go
+4. ./goedr
 
 ### Coming soon
 - View details for single report

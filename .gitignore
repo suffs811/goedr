@@ -1,8 +1,4 @@
-dist/
-build/
 db/*
-main
-goedr
 
 # Logs
 logs

@@ -17,11 +17,15 @@
 - Go/Gin backend server
 - Custom nosql ORM written in Go
 
-### Setup
-1. npm i
-2. npm run build
-3. go build goedr.go
-4. ./goedr
+### Usage
+Find the correct executable for your computer in the /app/ folder and run it.
+
+> If your build is not present, you can build the app yourself with Go:
+```bash
+go tool dist list
+
+GOOS=freebsd GOARCH=arm go build goedr.go
+```
 
 ### Coming soon
 - Continuous monitoring

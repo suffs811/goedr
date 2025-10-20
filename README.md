@@ -18,8 +18,8 @@
 - Custom nosql ORM written in Go
 
 ### Usage
-Find the correct executable for your computer in the /app/ folder and run it.
-
+1. Download the repository
+2. Find the correct executable for your computer and run it.
 > If your build is not present, you can build the app yourself with Go:
 ```bash
 go tool dist list

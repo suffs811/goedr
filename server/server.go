@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -18,7 +19,11 @@ var (
 
 func Init() {
 	// Create the Gin router
+	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
+	r.SetTrustedProxies([]string{"127.0.0.1"})
+
+	fmt.Print("\n\n[#] Server has started. Visit http://localhost:4000 to use the GoEDR app [#]\n\n\n")
 
 	// Creation endpoints
 	r.POST("/s/updatesettings", func(c *gin.Context) { updateSettings(c) })

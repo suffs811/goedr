@@ -8,6 +8,7 @@
     "start-frontend": "npm run build",
     "start-backend": "go run goedr.go",
     "build": "vite build",
+    "dist": "concurrently \"GOOS=linux GOARCH=amd64 go build -o goedr-linux-amd64\" \"GOOS=darwin GOARCH=amd64 go build -o goedr-macos-amd64\" \"GOOS=darwin GOARCH=arm64 go build -o goedr-macos-arm\" \"GOOS=windows GOARCH=amd64 go build -o goedr-windows-amd64\"",
     "lint": "eslint .",
     "preview": "vite preview"
   },

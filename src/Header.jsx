@@ -127,10 +127,10 @@ function Header() {
           <Link to="/settings"><li className='menuItem menuActive' onClick={menuClicked}>Settings</li></Link>
           <li className='menuItem menuSep'></li>
           <a href="https://github.com/suffs811" target="_blank"><li className='menuItem'>GitHub <span style={{color: '#F8F812'}}>{'\u2197'}</span></li></a>
+          <a href="https://www.virustotal.com/gui/home/search" target="_blank"><li className='menuItem'>VirusTotal <span style={{color: '#F8F812'}}>{'\u2197'}</span></li></a>
         </ul>
       </div>
     </>
   )
 }
-
 export default Header

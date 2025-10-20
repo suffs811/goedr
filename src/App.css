@@ -306,17 +306,51 @@ footer {
 }
 #reports-table tr:hover {
   background-color: #3a3a3a;
+  cursor: pointer;
 }
-.reports-header {
+#reports-header {
   display: flex;
-  justify-content: flex-end;
+  justify-content: right;
+  align-items: center;
 }
 .export-btn {
   background-color: var(--color-error);
   color: var(--color-fg);
   padding: 0.3em 0.6em;
-  font-weight: bold;
   border: none;
+  opacity: .9;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.export-btn:hover {
+  opacity: 1;
+  cursor: pointer;
+}
+
+/* Reports */
+#report-details {
+  text-align: left;
+  padding: 3rem 1.5rem;
+  border: 1px solid #444;
+  border-radius: 8px;
+  background-color: var(--color-bg-alt);
+}
+
+#reportview-header {
+  display: flex;
+  width: 70%;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.exit-report-img {
+  height: 2rem;
+  width: auto;
+  cursor: pointer;
+}
+
+.exit-report-img:hover {
+  filter: drop-shadow(0 0 .2em var(--color-success));
 }
 
 /* Settings */
@@ -351,7 +385,7 @@ footer {
 
 
 /* Mobile screens */
-@media screen and (max-width: 768px) {
+@media screen and (max-width: 600px) {
 /* Header */
 #logoHeader {
   background-color: #1a1a1a;

@@ -24,7 +24,6 @@
 4. ./goedr
 
 ### Coming soon
-- View details for single report
 - Continuous monitoring
 - Response actions
 

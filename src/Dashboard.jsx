@@ -1,10 +1,24 @@
 import { useEffect, useState } from 'react'
+import Report from './Report.jsx'
 import ex from "./assets/ex.png"
 import './App.css'
 
-export default function Base() {
+export default function Dashboard() {
   const [reports, setReports] = useState(null)
   const [error, setError] = useState("")
+  const [reportSelected, setReportSelected] = useState(null)
+
+  const toggleReportSelected = (report) => {
+    if (reportSelected === report) {
+      setReportSelected(null)
+    } else {
+      setReportSelected(report)
+    }
+  }
+
+  useEffect(() => {
+    setReportSelected(null)
+  }, [setReportSelected]);
 
   useEffect(() => {
     fetch('/s/dashboard')
@@ -87,14 +101,17 @@ export default function Base() {
     <>
       <div className='main'>
         <h1>Dashboard</h1>
-        <p>An endpoint detection & response tool written in Go</p>
+        { reportSelected ? (
+          <Report report={reportSelected} toggleReportSelected={toggleReportSelected} />
+        ) : (
         <div id="reports-container">
           <div id="reports-header">
           {error && <div className="error">{error}</div>}
             <div>
-              <button className="export-btn" onClick={exportReports}>Export Reports</button>
+              {reports.length !== 0 && <button className="export-btn" onClick={exportReports}>Export Reports</button>}
             </div>
           </div>
+          {reports.length !== 0 ?
           <table style={{ whiteSpace: "nowrap"}} id="reports-table">
               <thead>
                   <tr>
@@ -108,10 +125,10 @@ export default function Base() {
               <tbody>
                 {reports.map((report) => (
                   <tr key={report.timestamp}>
-                    <td>{report.date}</td>
-                    <td>{report.ip?.join(', ') || "No malicious IPs found"}</td>
-                    <td>{report.hash?.join(', ') || "No malicious hashes found"}</td>
-                    <td>{report.proc?.join(', ') || "No malicious processes found"}</td>
+                    <td onClick={toggleReportSelected.bind(null, report)}>{report.date}</td>
+                    <td onClick={toggleReportSelected.bind(null, report)}>{report.ip?.join(', ') || "No malicious IPs found"}</td>
+                    <td onClick={toggleReportSelected.bind(null, report)}>{report.hash?.join(', ') || "No malicious hashes found"}</td>
+                    <td onClick={toggleReportSelected.bind(null, report)}>{report.proc?.join(', ') || "No malicious processes found"}</td>
                     <td onClick={() => deleteReport(report.timestamp)}>
                       <img className="del-report-img" src={ex} alt=" X " />
                     </td>
@@ -119,8 +136,11 @@ export default function Base() {
                 ))}
               </tbody>
             </table>
-          </div>
-
+            :
+            <p>No reports available. Start a scan to generate reports.</p>
+          }
+        </div>
+        )}
       </div>
     </>
   )

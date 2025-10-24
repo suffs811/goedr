@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/pkg/browser"
 
 	"github.com/suffs811/goedr/godb"
 	"github.com/suffs811/goedr/scanner"
@@ -44,6 +45,10 @@ func Init() {
 	r.NoRoute(func(c *gin.Context) {
 		c.File("dist/index.html")
 	})
+
+	go func() {
+		browser.OpenURL("http://localhost:4000/")
+	}()
 
 	// Run the gin router
 	err = r.Run(":4000")
